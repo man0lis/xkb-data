@@ -81,8 +81,14 @@ impl KeyboardVariant {
     pub fn description(&self) -> &str { &self.config_item.description }
 }
 
-/// Fetches a list of keyboard layouts from `/usr/share/X11/xkb/rules/base.xml`.
+/// Fetches a list of keyboard layouts from `/usr/share/X11/xkb/rules/base.xml` or the file defined in the X11_BASE_RULES_XML environment variable.
 pub fn keyboard_layouts() -> io::Result<KeyboardLayouts> {
-    xml::from_reader(BufReader::new(File::open(X11_BASE_RULES)?))
-        .map_err(|why| io::Error::new(io::ErrorKind::InvalidData, format!("{}", why)))
+    if let Ok(x11_base_rules_xml) = std::env::var("X11_BASE_RULES_XML") {
+        xml::from_reader(BufReader::new(File::open(x11_base_rules_xml)?))
+            .map_err(|why| io::Error::new(io::ErrorKind::InvalidData, format!("{}", why)))
+    }
+    else {
+        xml::from_reader(BufReader::new(File::open(X11_BASE_RULES)?))
+            .map_err(|why| io::Error::new(io::ErrorKind::InvalidData, format!("{}", why)))
+    }
 }
